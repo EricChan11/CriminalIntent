@@ -11,6 +11,8 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bignerdranch.android.criminalintent.R
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 private const val TAG = "CrimeListFragment"
 class CrimeListFragment : Fragment() {
@@ -49,7 +51,9 @@ class CrimeListFragment : Fragment() {
         fun bind(crime: Crime) {
             this.crime = crime
             titleTextView.text = this.crime.title
-            dateTextView.text = this.crime.date.toString()
+            val dateFormat = SimpleDateFormat("EEEE, MMM d, yyyy", Locale.ENGLISH)
+            val formattedDate = dateFormat.format(crime.date)
+            dateTextView.text = formattedDate
             solvedImageView.visibility = if (crime.isSolved) {
                 View.VISIBLE
             } else {
