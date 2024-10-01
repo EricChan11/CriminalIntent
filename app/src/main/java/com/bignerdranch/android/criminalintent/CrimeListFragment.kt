@@ -1,3 +1,4 @@
+package com.bignerdranch.android.criminalintent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater

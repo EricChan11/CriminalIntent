@@ -47,9 +47,9 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.extensions)
     implementation(libs.androidx.recyclerview)
-    implementation("androidx.core:core-ktx:1.1.0-alpha04")
-    implementation("androidx.room:room-runtime:2.1.0-alpha04")
-    kapt("androidx.room:room-compiler:2.1.0-alpha04")
+    implementation("androidx.room:room-runtime:2.6.0") // Use the latest stable version
+    kapt("androidx.room:room-compiler:2.6.0")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
