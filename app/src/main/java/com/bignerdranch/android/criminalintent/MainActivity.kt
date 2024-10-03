@@ -1,12 +1,14 @@
 package com.bignerdranch.android.criminalintent
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-
-class MainActivity : AppCompatActivity() {
+import java.util.UUID
+private const val TAG = "MainActivity"
+class MainActivity : AppCompatActivity(),CrimeListFragment.Callbacks {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //enableEdgeToEdge()
@@ -20,5 +22,14 @@ class MainActivity : AppCompatActivity() {
                 .add(R.id.fragment_container, fragment)
                 .commit()
         }
+    }
+    override fun onCrimeSelected(crimeId: UUID) {
+        val fragment = CrimeFragment()
+        supportFragmentManager
+            .beginTransaction()
+            .replace(R.id.fragment_container, fragment)
+            .addToBackStack(null)
+            .commit()
+
     }
 }
