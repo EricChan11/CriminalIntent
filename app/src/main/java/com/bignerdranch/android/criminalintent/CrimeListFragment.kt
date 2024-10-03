@@ -14,6 +14,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bignerdranch.android.criminalintent.R
 import androidx.lifecycle.Observer
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import java.util.UUID
 
 private const val TAG = "CrimeListFragment"
@@ -22,7 +24,7 @@ class CrimeListFragment : Fragment() {
         fun onCrimeSelected(crimeId: UUID)
     }
     private lateinit var crimeRecyclerView: RecyclerView
-    private var adapter: CrimeAdapter? = CrimeAdapter(emptyList())
+    private var adapter: CrimeAdapter = CrimeAdapter()
     private var callbacks: Callbacks? = null
 
     private val crimeListViewModel: CrimeListViewModel by lazy {
@@ -84,24 +86,31 @@ class CrimeListFragment : Fragment() {
         }
     }
 
+    private inner class CrimeAdapter : ListAdapter<Crime, CrimeHolder>(CrimeDiffCallback()) {
 
-    private inner class CrimeAdapter(var crimes: List<Crime>)
-        : RecyclerView.Adapter<CrimeHolder>() {
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int)
-                : CrimeHolder {
-            val view = layoutInflater.inflate(R.layout.list_item_crime, parent, false)
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CrimeHolder {
+            val view = LayoutInflater.from(parent.context)
+                .inflate(R.layout.list_item_crime, parent, false)
             return CrimeHolder(view)
         }
-        override fun getItemCount() = crimes.size
+
         override fun onBindViewHolder(holder: CrimeHolder, position: Int) {
-            val crime = crimes[position]
+            val crime = getItem(position)  // 使用 getItem 获取当前项
             holder.bind(crime)
         }
 
     }
+    private class CrimeDiffCallback : DiffUtil.ItemCallback<Crime>() {
+        override fun areItemsTheSame(oldItem: Crime, newItem: Crime): Boolean {
+            return oldItem.id == newItem.id  // 比较ID是否相同
+        }
+
+        override fun areContentsTheSame(oldItem: Crime, newItem: Crime): Boolean {
+            return oldItem == newItem  // 使用数据类的equals方法比较内容是否相同
+        }
+    }
     private fun updateUI(crimes: List<Crime>) {
-        adapter = CrimeAdapter(crimes)
-        crimeRecyclerView.adapter = adapter
+        adapter?.submitList(crimes)  // 提交更新后的crime列表
     }
     companion object {
         fun newInstance(): CrimeListFragment {
