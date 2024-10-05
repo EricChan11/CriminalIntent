@@ -8,7 +8,9 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -61,7 +63,15 @@ class CrimeListFragment : Fragment() {
                     updateUI(crimes)
                 }
             })
+        val newCrimeButton: Button = view.findViewById(R.id.new_crime_button)
+        newCrimeButton.setOnClickListener {
+            val crime = Crime()
+            crimeListViewModel.addCrime(crime)
+            callbacks?.onCrimeSelected(crime.id)
+        }
     }
+
+
     override fun onDetach() {
         super.onDetach()
         callbacks = null
@@ -122,9 +132,17 @@ class CrimeListFragment : Fragment() {
 
     }
     private fun updateUI(crimes: List<Crime>) {
-        adapter = CrimeAdapter(crimes)
-        crimeRecyclerView.adapter = adapter
+        if (crimes.isEmpty()) {
+            crimeRecyclerView.visibility = View.GONE
+            view?.findViewById<LinearLayout>(R.id.empty_view)?.visibility = View.VISIBLE
+        } else {
+            crimeRecyclerView.visibility = View.VISIBLE
+            view?.findViewById<LinearLayout>(R.id.empty_view)?.visibility = View.GONE
+            adapter = CrimeAdapter(crimes)
+            crimeRecyclerView.adapter = adapter
+        }
     }
+
     companion object {
         fun newInstance(): CrimeListFragment {
             return CrimeListFragment()
