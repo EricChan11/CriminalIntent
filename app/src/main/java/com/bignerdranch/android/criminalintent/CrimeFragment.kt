@@ -1,8 +1,10 @@
 package com.bignerdranch.android.criminalintent
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
+import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
 import android.provider.ContactsContract
@@ -10,17 +12,20 @@ import android.provider.Settings.System.DATE_FORMAT
 import android.text.Editable
 import android.text.TextWatcher
 import android.text.format.DateFormat
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
+import android.widget.Toast
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import com.bignerdranch.android.criminalintent.R
+import android.Manifest
+import android.util.Log
 import java.util.Date
 import java.util.UUID
 
@@ -30,7 +35,7 @@ private const val DIALOG_DATE = "DialogDate"
 private const val REQUEST_DATE = 0
 private const val REQUEST_CONTACT = 1
 private const val DATE_FORMAT = "EEE, MMM, dd"
-
+private val REQUEST_CODE_READ_CONTACTS = 100
 
 class CrimeFragment : Fragment(), DatePickerFragment.Callbacks {
     private lateinit var crime: Crime
@@ -39,6 +44,7 @@ class CrimeFragment : Fragment(), DatePickerFragment.Callbacks {
     private lateinit var solvedCheckBox: CheckBox
     private lateinit var reportButton: Button
     private lateinit var suspectButton: Button
+    private lateinit var CallButton: Button
 
     private val crimeDetailViewModel: CrimeDetailViewModel by lazy {
         ViewModelProviders.of(this).get(CrimeDetailViewModel::class.java)
@@ -57,12 +63,18 @@ class CrimeFragment : Fragment(), DatePickerFragment.Callbacks {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_crime, container, false)
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_CONTACTS)
+            != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(requireActivity(),
+                arrayOf(Manifest.permission.READ_CONTACTS), REQUEST_CODE_READ_CONTACTS)
+        }
         titleField = view.findViewById(R.id.crime_title) as EditText
         dateButton = view.findViewById(R.id.crime_date) as Button
-
+        CallButton = view.findViewById(R.id.call) as Button
         solvedCheckBox = view.findViewById(R.id.crime_solved) as CheckBox
         reportButton = view.findViewById(R.id.crime_report) as Button
         suspectButton = view.findViewById(R.id.crime_suspect) as Button
+
         return view
     }
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -110,6 +122,9 @@ class CrimeFragment : Fragment(), DatePickerFragment.Callbacks {
                 show(this@CrimeFragment.requireFragmentManager(), DIALOG_DATE)
             }
         }
+        CallButton.setOnClickListener {
+            fetchPhoneNumberAndDial()
+            }
         reportButton.setOnClickListener {
             Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
@@ -135,7 +150,8 @@ class CrimeFragment : Fragment(), DatePickerFragment.Callbacks {
                 packageManager.resolveActivity(pickContactIntent,
                     PackageManager.MATCH_DEFAULT_ONLY)
             if (resolvedActivity == null) {
-                isEnabled = false
+                Log.d(TAG, "No activity found to handle contact picking.")
+                //isEnabled = false
             }
         }
     }
@@ -168,6 +184,48 @@ class CrimeFragment : Fragment(), DatePickerFragment.Callbacks {
             suspectButton.text = crime.suspect
         }
     }
+    @SuppressLint("Range")
+    private fun fetchPhoneNumberAndDial() {
+        val cursor: Cursor? = requireContext().contentResolver.query(
+            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+            arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER),
+            "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} = ?",
+            arrayOf(crime.suspect), // 将 "嫌疑人姓名" 替换为实际的嫌疑人姓名
+            null
+        )
+
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val phoneNumber = it.getString(it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                dialPhoneNumber(phoneNumber)
+            } else {
+                Toast.makeText(requireContext(), "unfound", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun dialPhoneNumber(phoneNumber: String) {
+        val uri = Uri.parse("tel:$phoneNumber")
+        val intent = Intent(Intent.ACTION_DIAL, uri)
+        startActivity(intent)
+    }
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            REQUEST_CODE_READ_CONTACTS -> {
+                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                    // 权限获得，用户可以拨打电话
+                } else {
+                    Toast.makeText(requireContext(), "权限被拒绝", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
     private fun getCrimeReport(): String {
         val solvedString = if (crime.isSolved) {
             getString(R.string.crime_report_solved)
