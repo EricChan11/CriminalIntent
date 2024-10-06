@@ -135,8 +135,10 @@ class CrimeFragment : Fragment(), DatePickerFragment.Callbacks {
                 packageManager.resolveActivity(pickContactIntent,
                     PackageManager.MATCH_DEFAULT_ONLY)
             if (resolvedActivity == null) {
-                isEnabled = false
+                Log.d("ContactPicker", "No activities found for the intent.")
+                //isEnabled = false
             }
+
         }
     }
     override fun onStop() {
