@@ -2,7 +2,6 @@ package com.bignerdranch.android.criminalintent
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.pm.ResolveInfo
 import android.net.Uri
 import android.os.Bundle
 import android.provider.ContactsContract
@@ -10,19 +9,20 @@ import android.provider.Settings.System.DATE_FORMAT
 import android.text.Editable
 import android.text.TextWatcher
 import android.text.format.DateFormat
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import com.bignerdranch.android.criminalintent.R
 import java.util.Date
 import java.util.UUID
+import android.Manifest
 
 private const val ARG_CRIME_ID = "crime_id"
 private const val TAG = "CrimeFragment"
@@ -30,6 +30,7 @@ private const val DIALOG_DATE = "DialogDate"
 private const val REQUEST_DATE = 0
 private const val REQUEST_CONTACT = 1
 private const val DATE_FORMAT = "EEE, MMM, dd"
+private const val REQUEST_PERMISSION_CONTACTS = 1
 
 
 class CrimeFragment : Fragment(), DatePickerFragment.Callbacks {
@@ -59,7 +60,9 @@ class CrimeFragment : Fragment(), DatePickerFragment.Callbacks {
         val view = inflater.inflate(R.layout.fragment_crime, container, false)
         titleField = view.findViewById(R.id.crime_title) as EditText
         dateButton = view.findViewById(R.id.crime_date) as Button
-
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.READ_CONTACTS), REQUEST_PERMISSION_CONTACTS)
+        }
         solvedCheckBox = view.findViewById(R.id.crime_solved) as CheckBox
         reportButton = view.findViewById(R.id.crime_report) as Button
         suspectButton = view.findViewById(R.id.crime_suspect) as Button
@@ -125,19 +128,15 @@ class CrimeFragment : Fragment(), DatePickerFragment.Callbacks {
             }
         }
         suspectButton.apply {
-            val pickContactIntent =
-                Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI)
-            setOnClickListener {
-                startActivityForResult(pickContactIntent, REQUEST_CONTACT)
-            }
-            val packageManager: PackageManager = requireActivity().packageManager
-            val resolvedActivity: ResolveInfo? =
-                packageManager.resolveActivity(pickContactIntent,
-                    PackageManager.MATCH_DEFAULT_ONLY)
-            if (resolvedActivity == null) {
-                Log.d("ContactPicker", "No activities found for the intent.")
-                //isEnabled = false
-            }
+            val pickIntent = Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI)
+            val packageManager = requireActivity().packageManager
+            val resolverInfo = packageManager.queryIntentActivities(pickIntent, PackageManager.MATCH_DEFAULT_ONLY)
+            if (resolverInfo == null || resolverInfo.size == 0)
+                this.isEnabled = false;
+            else
+                setOnClickListener {
+                    startActivityForResult(pickIntent, REQUEST_CONTACT)
+                }
 
         }
     }
