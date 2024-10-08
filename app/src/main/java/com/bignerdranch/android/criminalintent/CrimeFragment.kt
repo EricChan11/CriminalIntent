@@ -52,7 +52,6 @@ class CrimeFragment : Fragment(), DatePickerFragment.Callbacks {
     private lateinit var photoView: ImageView
     private lateinit var photoUri: Uri
 
-
     private val crimeDetailViewModel: CrimeDetailViewModel by lazy {
         ViewModelProviders.of(this).get(CrimeDetailViewModel::class.java)
     }
@@ -186,6 +185,11 @@ class CrimeFragment : Fragment(), DatePickerFragment.Callbacks {
                 }
                 startActivityForResult(captureImage, REQUEST_PHOTO)
             }
+        }
+        photoView.setOnClickListener {
+            val photoUri: Unit = // 获取照片的 URI
+                ZoomedImageDialogFragment.newInstance(photoUri)
+                    .show(parentFragmentManager, "ZoomedImageDialog")
         }
     }
     override fun onStop() {
