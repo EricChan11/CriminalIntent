@@ -29,6 +29,9 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import androidx.core.content.FileProvider
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
 
 private const val ARG_CRIME_ID = "crime_id"
 private const val TAG = "CrimeFragment"
@@ -213,8 +216,14 @@ class CrimeFragment : Fragment(), DatePickerFragment.Callbacks {
     }
     private fun updateUI() {
         titleField.setText(crime.title)
-        dateButton.text = crime.date.toString()
-          //dateButton.text= crime.getFormattedDate()
+//        dateButton.text = crime.date.toString()
+        val locale = Locale.getDefault()
+        val dateFormat = SimpleDateFormat("EEE, MMM dd, yyyy HH:mm:ss z", locale)
+        dateFormat.timeZone = TimeZone.getDefault()
+        val formattedDate = dateFormat.format(crime.date)
+        dateButton.text = formattedDate
+
+
         solvedCheckBox.apply {
             isChecked = crime.isSolved
             jumpDrawablesToCurrentState()
