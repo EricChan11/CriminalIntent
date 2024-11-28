@@ -234,7 +234,7 @@ class CrimeFragment : Fragment(), DatePickerFragment.Callbacks {
         } else {
             photoView.setImageDrawable(null)
             photoView.contentDescription =
-                getString(R.string.crime_photo_no_image_description
+                getString(R.string.crime_photo_no_image_description)
         }
     }
     private fun getCrimeReport(): String {
