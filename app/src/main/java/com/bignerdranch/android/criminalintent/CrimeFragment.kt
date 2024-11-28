@@ -130,6 +130,8 @@ class CrimeFragment : Fragment(), DatePickerFragment.Callbacks {
         solvedCheckBox.apply {
             setOnCheckedChangeListener { _, isChecked ->
                 crime.isSolved = isChecked
+                contentDescription = if (isChecked) "Solved" else "not Solved"
+
             }
         }
         dateButton.setOnClickListener {
@@ -217,6 +219,7 @@ class CrimeFragment : Fragment(), DatePickerFragment.Callbacks {
           //dateButton.text= crime.getFormattedDate()
         solvedCheckBox.apply {
             isChecked = crime.isSolved
+            contentDescription = if (isChecked) "Solved" else "not Solved"
             jumpDrawablesToCurrentState()
         }
         if (crime.suspect.isNotEmpty()) {
